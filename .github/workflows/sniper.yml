@@ -1,0 +1,53 @@
+name: Nikon Refurb Sniper
+
+on:
+  schedule:
+    # Runs every 20 minutes, 24/7
+    - cron: '*/20 * * * *'
+  workflow_dispatch: # Lets you trigger a test run manually with one click
+
+permissions:
+  contents: write
+
+jobs:
+  snipe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Cache Playwright browser
+        id: cache-playwright
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-chromium
+
+      - name: Install Playwright
+        run: |
+          pip install playwright
+          if [ "${{ steps.cache-playwright.outputs.cache-hit }}" != "true" ]; then
+            playwright install --with-deps chromium
+          else
+            playwright install-deps chromium
+          fi
+
+      - name: Run Nikon Sniper
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: python nikon_sniper.py
+
+      - name: Save alert state to repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add state.json || true
+          git diff --staged --quiet || git commit -m "Update sniper alert state [skip ci]"
+          git push
