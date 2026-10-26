@@ -25,6 +25,7 @@ WATCHLIST = [
 ]
 
 SALE_KEYWORDS = [
+    "nikon",  # <-- Temporary test trigger!
     "extra 10%",
     "additional 10%",
     "save an extra",
