@@ -24,7 +24,6 @@ WATCHLIST = [
 ]
 
 SALE_KEYWORDS = [
-    "nikon",  # <-- Temporary test trigger! Delete this line after your phone buzzes
     "extra 10%",
     "additional 10%",
     "save an extra",
