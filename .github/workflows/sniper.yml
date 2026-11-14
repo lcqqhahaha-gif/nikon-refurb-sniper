@@ -9,11 +9,14 @@ on:
 permissions:
   contents: write
 
+env:
+  # Silences the Node.js 20 deprecation warning on GitHub runners
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   snipe:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -23,16 +26,22 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Get latest Playwright version
+        id: playwright-ver
+        run: |
+          pip install playwright
+          echo "version=$(python -c 'import importlib.metadata; print(importlib.metadata.version("playwright"))')" >> $GITHUB_OUTPUT
+
       - name: Cache Playwright browser
         id: cache-playwright
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-chromium
+          # Automatically busts the cache whenever Playwright releases a new version!
+          key: ${{ runner.os }}-playwright-chromium-${{ steps.playwright-ver.outputs.version }}
 
-      - name: Install Playwright
+      - name: Install Playwright browser
         run: |
-          pip install playwright
           if [ "${{ steps.cache-playwright.outputs.cache-hit }}" != "true" ]; then
             playwright install --with-deps chromium
           else
